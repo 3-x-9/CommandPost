@@ -12,8 +12,16 @@ import {
 } from "../../../wailsjs/go/main/App"
 import { Collection, Environment } from "../../types";
 
+const defaultEndpoint = {
+    method: "GET",
+    path: "",
+    summary: "",
+    description: "",
+    tags: [""],
+}
+
 export function MainLayout() {
-    const [activeEndpoint, setActiveEndpoint] = useState<EndpointDef | null>(null);
+    const [activeEndpoint, setActiveEndpoint] = useState<EndpointDef | null>(defaultEndpoint);
     const [response, setResponse] = useState<ResponseData | null>(null);
     const [loading, setLoading] = useState(false);
     const [endpoints, setEndpoints] = useState<EndpointDef[]>([]);
