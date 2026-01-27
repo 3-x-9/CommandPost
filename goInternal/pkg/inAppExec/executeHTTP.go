@@ -3,17 +3,24 @@ package pkg
 import (
 	"bytes"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
 )
 
+type FormDataPart struct {
+	Value  string `json:"value"`
+	IsFile bool   `json:"isFile"`
+}
+
 type RequestData struct {
-	Method  string            `json:"method"`
-	URL     string            `json:"url"`
-	Headers map[string]string `json:"headers"`
-	Body    string            `json:"body"`
-	Timeout int               `json:"timeout"`
+	Method   string                  `json:"method"`
+	URL      string                  `json:"url"`
+	Headers  map[string]string       `json:"headers"`
+	Body     string                  `json:"body"`
+	FormData map[string]FormDataPart `json:"formData"`
+	Timeout  int                     `json:"timeout"`
 }
 
 type ResponseData struct {
@@ -25,10 +32,21 @@ type ResponseData struct {
 }
 
 func ExecuteHTTP(reqDat RequestData) (ResponseData, error) {
-	// 1. Handle Body
 	var bodyReader io.Reader
 	if reqDat.Body != "" {
 		bodyReader = bytes.NewBufferString(reqDat.Body)
+	} else if len(reqDat.FormData) > 0 {
+		mimeWriter := &bytes.Buffer{}
+		multipartWriter := multipart.NewWriter(mimeWriter)
+		for k, v := range reqDat.FormData {
+			if v.IsFile {
+				multipartWriter.CreateFormFile(k, v.Value)
+			} else {
+				multipartWriter.CreateFormField(k)
+			}
+		}
+		multipartWriter.Close()
+		bodyReader = mimeWriter
 	}
 
 	req, err := http.NewRequest(reqDat.Method, reqDat.URL, bodyReader)
@@ -41,7 +59,6 @@ func ExecuteHTTP(reqDat RequestData) (ResponseData, error) {
 		}, nil
 	}
 
-	// 2. Handle Headers
 	for k, v := range reqDat.Headers {
 		req.Header.Set(k, v)
 	}
@@ -64,7 +81,6 @@ func ExecuteHTTP(reqDat RequestData) (ResponseData, error) {
 
 	duration := time.Since(start)
 
-	// 3. Handle Response Headers
 	resHeaders := make(map[string]string)
 	for name, header := range resp.Header {
 		if len(header) == 0 || name == "" {

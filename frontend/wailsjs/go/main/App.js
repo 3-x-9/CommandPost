@@ -6,6 +6,10 @@ export function DeleteCollection(arg1) {
   return window['go']['main']['App']['DeleteCollection'](arg1);
 }
 
+export function DeleteEnvironment(arg1) {
+  return window['go']['main']['App']['DeleteEnvironment'](arg1);
+}
+
 export function ExecuteRequest(arg1) {
   return window['go']['main']['App']['ExecuteRequest'](arg1);
 }
@@ -16,6 +20,10 @@ export function Generate(arg1, arg2, arg3) {
 
 export function GetAuthInfo(arg1) {
   return window['go']['main']['App']['GetAuthInfo'](arg1);
+}
+
+export function GetEnvironments() {
+  return window['go']['main']['App']['GetEnvironments']();
 }
 
 export function LoadCollection() {
@@ -34,12 +42,24 @@ export function SaveCollection(arg1, arg2) {
   return window['go']['main']['App']['SaveCollection'](arg1, arg2);
 }
 
+export function SaveEnvironment(arg1) {
+  return window['go']['main']['App']['SaveEnvironment'](arg1);
+}
+
 export function SaveHistory(arg1, arg2) {
   return window['go']['main']['App']['SaveHistory'](arg1, arg2);
 }
 
 export function SelectDirectory() {
   return window['go']['main']['App']['SelectDirectory']();
+}
+
+export function SelectFile() {
+  return window['go']['main']['App']['SelectFile']();
+}
+
+export function UploadFile(arg1) {
+  return window['go']['main']['App']['UploadFile'](arg1);
 }
 
 export function ValidateSpec(arg1) {

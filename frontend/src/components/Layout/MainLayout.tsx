@@ -5,11 +5,12 @@ import { Archive } from "lucide-react";
 import { RequestPanel } from "../Request/RequestPanel";
 import { ResponsePanel } from "../Response/ResponsePanel";
 import { GenerateCLIModal } from "../CLI/GenerateCLIModal";
+import { EnvironmentSwitcher } from "../Environment/EnvironmentSwitcher";
 import {
     ParseSpecDetails, ExecuteRequest, LoadCollection, SaveHistory, SaveCollection, DeleteCollection, Generate,
-    SelectDirectory, LoadHistory
+    SelectDirectory, LoadHistory, GetEnvironments, SaveEnvironment, DeleteEnvironment
 } from "../../../wailsjs/go/main/App"
-import { Collection } from "../../types";
+import { Collection, Environment } from "../../types";
 
 export function MainLayout() {
     const [activeEndpoint, setActiveEndpoint] = useState<EndpointDef | null>(null);
@@ -19,6 +20,8 @@ export function MainLayout() {
     const [baseUrl, setBaseUrl] = useState<string>("");
     const [history, setHistory] = useState<any[]>([]);
     const [collections, setCollections] = useState<Collection[]>([]);
+    const [environments, setEnvironments] = useState<Environment[]>([]);
+    const [activeEnv, setActiveEnv] = useState<Environment | null>(null);
     const [currentSpecPath, setCurrentSpecPath] = useState<string>("https://petstore3.swagger.io/api/v3/openapi.json");
     const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
 
@@ -33,6 +36,7 @@ export function MainLayout() {
         // Load initial data from DB
         loadCollectionsFromDB();
         loadHistoryFromDB();
+        loadEnvironmentsFromDB();
     }, []);
 
     const loadCollectionsFromDB = async () => {
@@ -41,6 +45,34 @@ export function MainLayout() {
             setCollections(data || []);
         } catch (err) {
             console.error("Failed to load collections:", err);
+        }
+    };
+
+    const loadEnvironmentsFromDB = async () => {
+        try {
+            const data = await GetEnvironments();
+            setEnvironments(data || []);
+        } catch (err) {
+            console.error("Failed to load environments:", err);
+        }
+    };
+
+    const handleSaveEnvironment = async (env: Environment) => {
+        try {
+            await SaveEnvironment(env);
+            await loadEnvironmentsFromDB();
+        } catch (err) {
+            console.error("Failed to save environment:", err);
+        }
+    };
+
+    const handleDeleteEnvironment = async (name: string) => {
+        try {
+            await DeleteEnvironment(name);
+            await loadEnvironmentsFromDB();
+            if (activeEnv?.name === name) setActiveEnv(null);
+        } catch (err) {
+            console.error("Failed to delete environment:", err);
         }
     };
 
@@ -69,19 +101,26 @@ export function MainLayout() {
         setLoading(true);
         try {
             let req = { ...requestData };
+            const currentBaseUrl = activeEnv?.variables?.baseUrl || baseUrl;
 
             // Prepend base URL if available and URL is relative
-            if (baseUrl && !req.url.startsWith('http')) {
+            if (currentBaseUrl && !req.url.startsWith('http')) {
                 // Ensure we don't end up with double slashes
-                const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+                const cleanBase = currentBaseUrl.endsWith('/') ? currentBaseUrl.slice(0, -1) : currentBaseUrl;
                 const cleanPath = req.url.startsWith('/') ? req.url : '/' + req.url;
                 req.url = cleanBase + cleanPath;
             }
-            const res = await ExecuteRequest(req);
+            // Ensure body passed to backend is a string for now, to match current Go implementation
+            const backendReq = {
+                ...req,
+                body: typeof req.body === 'string' ? req.body : "{}" // Placeholder for FormData handling
+            };
+
+            const res = await ExecuteRequest(backendReq as any);
             setResponse(res);
 
             // Save to history in DB
-            await SaveHistory(req, res);
+            await SaveHistory(backendReq as any, res);
 
             // Update local history list (optimistic or just push)
             setHistory(prev => [{
@@ -103,7 +142,13 @@ export function MainLayout() {
             const existing = collections.find(c => c.name === collectionName);
             const requests = existing ? [...existing.requests, requestData] : [requestData];
 
-            await SaveCollection(collectionName, requests);
+            // Ensure all request bodies are strings for DB storage
+            const formattedRequests = requests.map(r => ({
+                ...r,
+                body: typeof r.body === 'string' ? r.body : "{}"
+            }));
+
+            await SaveCollection(collectionName, formattedRequests as any);
             await loadCollectionsFromDB();
         } catch (err) {
             console.error("Failed to save collection:", err);
@@ -186,7 +231,16 @@ export function MainLayout() {
             <div className="content-area">
                 {activeEndpoint ? (
                     <div className="workspace">
-                        <h2>{activeEndpoint.summary}</h2>
+                        <div className="workspace-header">
+                            <h2>{activeEndpoint.summary}</h2>
+                            <EnvironmentSwitcher
+                                environments={environments}
+                                activeEnv={activeEnv}
+                                onSelect={setActiveEnv}
+                                onSave={handleSaveEnvironment}
+                                onDelete={handleDeleteEnvironment}
+                            />
+                        </div>
                         <div className="api-path">
                             <span className={`method-pill ${activeEndpoint.method.toLowerCase()}`}>{activeEndpoint.method}</span>
                             <span className="path-text">{activeEndpoint.path}</span>

@@ -2,8 +2,6 @@
 
 CommandPost is a modern, cross-platform API development environment that bridges the gap between interactive API testing (like Postman) and automated CLI generation. Built with **Wails (Go)** and **React (TypeScript)**, it provides a premium developer experience for designing, testing, and graduates API interactions into standalone CLI tools.
 
-![CommandPost Banner](https://via.placeholder.com/1200x400/1e293b/6366f1?text=CommandPost:+Interactive+API+Workspace+%2B+CLI+Generator)
-
 ## ✨ Features
 
 ### 🛠 Interactive API Workspace

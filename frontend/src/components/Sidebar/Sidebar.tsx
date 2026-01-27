@@ -25,6 +25,7 @@ export function Sidebar({
 }: SidebarProps) {
     const [activeTab, setActiveTab] = useState<'collections' | 'history'>('collections');
     const [expandedTags, setExpandedTags] = useState<Record<string, boolean>>({});
+    const [searchTerm, setSearchTerm] = useState("");
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -36,23 +37,50 @@ export function Sidebar({
         setExpandedTags(prev => ({ ...prev, [tag]: !prev[tag] }));
     };
 
-    // Group endpoints by their first tag
-    const grouped = endpoints.reduce((acc, ep) => {
+    // Filter and Group endpoints
+    const filteredEndpoints = endpoints.filter(ep =>
+        ep.path.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (ep.summary && ep.summary.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    const grouped = filteredEndpoints.reduce((acc, ep) => {
         const tag = ep.tags[0] || "Default";
         if (!acc[tag]) acc[tag] = [];
         acc[tag].push(ep);
         return acc;
     }, {} as Record<string, EndpointDef[]>);
 
+    const filteredCollections = collections.map(col => ({
+        ...col,
+        requests: col.requests.filter(req =>
+            req.url.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    })).filter(col => col.requests.length > 0 || col.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
     return (
         <div className="sidebar" style={{ width: width ? `${width}px` : undefined }}>
-            <div className="sidebar-input-area" style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+            <div className="sidebar-search-area">
                 <input
                     type="text"
+                    className="sidebar-input"
                     placeholder="Path to OpenAPI Spec (Enter)"
                     onKeyDown={handleKeyDown}
-                    style={{ width: '100%' }}
                 />
+                <div className="search-input-wrapper">
+                    <input
+                        type="text"
+                        className="sidebar-input"
+                        placeholder="Search endpoints..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    {searchTerm && (
+                        <span
+                            className="search-clear-btn"
+                            onClick={() => setSearchTerm("")}
+                        >✕</span>
+                    )}
+                </div>
             </div>
             <div className="sidebar-tabs">
                 <div
@@ -79,40 +107,41 @@ export function Sidebar({
                         )}
 
                         {/* Render Saved Collections Section */}
-                        {collections.length > 0 && (
+                        {filteredCollections.length > 0 && (
                             <div className="sidebar-section">
                                 <div className="sidebar-section-header">
                                     <Database size={14} />
                                     <span>Saved Collections</span>
                                 </div>
-                                {collections.map(col => (
-                                    <div key={col.name} className="tag-group">
-                                        <div className="tag-header">
-                                            <div className="tag-header-left" onClick={() => toggleTag(col.name)}>
+                                {filteredCollections.map(col => (
+                                    <div key={col.name} className="collection-card">
+                                        <div className="collection-header" onClick={() => toggleTag(col.name)}>
+                                            <div className="collection-info">
                                                 {expandedTags[col.name] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                                                <Folder size={14} className="icon" style={{ color: 'var(--accent)' }} />
                                                 <span>{col.name}</span>
-                                                <span className="count-badge">{col.requests.length}</span>
                                             </div>
-                                            {onDeleteCollection && (
-                                                <button
-                                                    className="delete-btn"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (confirm(`Delete collection "${col.name}"?`)) {
-                                                            onDeleteCollection(col.name);
-                                                        }
-                                                    }}
-                                                    title="Delete Collection"
-                                                >
-                                                    <Trash2 size={12} />
-                                                </button>
-                                            )}
+                                            <div className="collection-actions">
+                                                <span className="count-badge">{col.requests.length}</span>
+                                                {onDeleteCollection && (
+                                                    <button
+                                                        className="btn-icon danger sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (confirm(`Delete collection "${col.name}"?`)) {
+                                                                onDeleteCollection(col.name);
+                                                            }
+                                                        }}
+                                                        title="Delete Collection"
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                         {expandedTags[col.name] && (
-                                            <div className="tag-items">
+                                            <div className="collection-requests">
                                                 {col.requests.map((req, i) => (
-                                                    <div key={i} className="sidebar-item" onClick={() => {
+                                                    <div key={i} className="collection-item" onClick={() => {
                                                         onSelect({
                                                             method: req.method,
                                                             path: req.url,
@@ -122,7 +151,7 @@ export function Sidebar({
                                                         });
                                                     }}>
                                                         <span className={`method-badge ${req.method.toLowerCase()}`}>{req.method}</span>
-                                                        <span className="summary">{req.url}</span>
+                                                        <span className="req-url">{req.url}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -159,7 +188,9 @@ export function Sidebar({
                                                         onClick={() => onSelect(ep)}
                                                     >
                                                         <span className={`method-badge ${ep.method.toLowerCase()}`}>{ep.method}</span>
-                                                        <span className="summary">{ep.summary || ep.path}</span>
+                                                        <span className={`summary ${!ep.summary ? 'path-fallback' : ''}`}>
+                                                            {ep.summary || ep.path}
+                                                        </span>
                                                     </div>
                                                 ))}
                                             </div>

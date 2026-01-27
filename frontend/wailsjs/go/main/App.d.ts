@@ -5,11 +5,15 @@ import {generator} from '../models';
 
 export function DeleteCollection(arg1:string):Promise<void>;
 
+export function DeleteEnvironment(arg1:string):Promise<void>;
+
 export function ExecuteRequest(arg1:pkg.RequestData):Promise<pkg.ResponseData>;
 
 export function Generate(arg1:string,arg2:string,arg3:string):Promise<void>;
 
 export function GetAuthInfo(arg1:string):Promise<Array<generator.AuthScheme>>;
+
+export function GetEnvironments():Promise<Array<pkg.Environment>>;
 
 export function LoadCollection():Promise<Array<pkg.Collection>>;
 
@@ -19,8 +23,14 @@ export function ParseSpecDetails(arg1:string):Promise<pkg.SpecDetails>;
 
 export function SaveCollection(arg1:string,arg2:Array<pkg.RequestData>):Promise<void>;
 
+export function SaveEnvironment(arg1:pkg.Environment):Promise<void>;
+
 export function SaveHistory(arg1:pkg.RequestData,arg2:pkg.ResponseData):Promise<void>;
 
 export function SelectDirectory():Promise<string>;
+
+export function SelectFile():Promise<string>;
+
+export function UploadFile(arg1:string):Promise<Array<number>>;
 
 export function ValidateSpec(arg1:string):Promise<boolean>;

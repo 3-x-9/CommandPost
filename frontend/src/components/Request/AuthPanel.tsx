@@ -26,8 +26,51 @@ export function AuthPanel({ auth, onChange }: AuthPanelProps) {
                     <option value="none">No Auth</option>
                     <option value="bearer">Bearer Token</option>
                     <option value="basic">Basic Auth</option>
+                    <option value="api_key">API Key</option>
                 </select>
             </div>
+
+            {auth.type === 'api_key' && (
+                <div className="auth-grid">
+                    <div className="form-group">
+                        <label>Key</label>
+                        <input
+                            type="text"
+                            placeholder="e.g. X-API-Key"
+                            value={auth.apiKeyKey || ''}
+                            onChange={(e) => updateAuth('apiKeyKey', e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Value</label>
+                        <div className="input-group">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                placeholder="API Key Value"
+                                value={auth.apiKey || ''}
+                                onChange={(e) => updateAuth('apiKey', e.target.value)}
+                            />
+                            <button
+                                className="btn-icon-inside"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label>Add to</label>
+                        <select
+                            value={auth.apiKeyIn || 'header'}
+                            onChange={(e) => updateAuth('apiKeyIn', e.target.value as any)}
+                            className="input-select"
+                        >
+                            <option value="header">Header</option>
+                            <option value="query">Query Params</option>
+                        </select>
+                    </div>
+                </div>
+            )}
 
             {auth.type === 'bearer' && (
                 <div className="form-group">

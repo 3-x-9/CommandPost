@@ -11,11 +11,17 @@ export interface SpecDetails {
     endpoints: EndpointDef[];
 }
 
+export interface FormDataPart {
+    value: string;
+    isFile: boolean;
+}
+
 export interface RequestData {
     method: string;
     url: string;
     headers: Record<string, string>;
     body: string;
+    formData?: Record<string, FormDataPart>;
     timeout: number;
 }
 
@@ -38,11 +44,22 @@ export interface KeyValueItem {
     value: string;
     description?: string;
     enabled: boolean;
+    isFile?: boolean;
 }
 
 export interface AuthConfig {
-    type: 'none' | 'bearer' | 'basic';
+    type: 'none' | 'bearer' | 'basic' | 'api_key' | 'oauth' | 'oauth2';
     bearerToken?: string;
     basicUsername?: string;
     basicPassword?: string;
+    apiKey?: string;
+    apiKeyKey?: string;
+    apiKeyIn?: 'header' | 'query';
+    oauthToken?: string;
+    oauth2Token?: string;
+}
+
+export interface Environment {
+    name: string;
+    variables: Record<string, string>;
 }

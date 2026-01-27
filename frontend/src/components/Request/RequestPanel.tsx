@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { EndpointDef, RequestData, KeyValueItem, AuthConfig } from "../../types";
+import { EndpointDef, RequestData, KeyValueItem, AuthConfig, FormDataPart } from "../../types";
 import { Send, Save } from "lucide-react";
 import { KeyValueEditor } from "./KeyValueEditor";
 import { AuthPanel } from "./AuthPanel";
@@ -17,6 +17,14 @@ export function RequestPanel({ endpoint, onSend, onSave, onShowGenerateModal }: 
     const [method, setMethod] = useState(endpoint.method);
     const [activeTab, setActiveTab] = useState("params");
     const [body, setBody] = useState("{}");
+    const [bodyType, setBodyType] = useState("raw");
+    const [formDataItems, setFormDataItems] = useState<KeyValueItem[]>([
+        { id: crypto.randomUUID(), key: '', value: '', enabled: true, isFile: false }
+    ]);
+    const [urlEncodedItems, setUrlEncodedItems] = useState<KeyValueItem[]>([
+        { id: crypto.randomUUID(), key: '', value: '', enabled: true, isFile: false }
+    ]);
+
 
     // Detailed state
     const [params, setParams] = useState<KeyValueItem[]>([
@@ -76,27 +84,88 @@ export function RequestPanel({ endpoint, onSend, onSave, onShowGenerateModal }: 
     };
 
     const buildRequestData = (): RequestData => {
-        // Convert array to record
         const headerRecord: Record<string, string> = {};
         headers.forEach(h => {
             if (h.enabled && h.key) headerRecord[h.key] = h.value;
         });
 
-        // Auth headers
+        let finalUrl = url;
+
         if (auth.type === 'bearer' && auth.bearerToken) {
             headerRecord['Authorization'] = `Bearer ${auth.bearerToken}`;
         } else if (auth.type === 'basic' && auth.basicUsername) {
             const token = btoa(`${auth.basicUsername}:${auth.basicPassword || ''}`);
             headerRecord['Authorization'] = `Basic ${token}`;
+        } else if (auth.type === 'api_key' && auth.apiKey && auth.apiKeyKey) {
+            if (auth.apiKeyIn === 'query') {
+                const connector = finalUrl.includes('?') ? '&' : '?';
+                finalUrl += `${connector}${encodeURIComponent(auth.apiKeyKey)}=${encodeURIComponent(auth.apiKey)}`;
+            } else {
+                headerRecord[auth.apiKeyKey] = auth.apiKey;
+            }
+        } else if (auth.type === 'oauth' && auth.oauthToken) {
+            headerRecord['Authorization'] = `Bearer ${auth.oauthToken}`;
+        } else if (auth.type === 'oauth2' && auth.oauth2Token) {
+            headerRecord['Authorization'] = `Bearer ${auth.oauth2Token}`;
         }
 
-        return {
-            method,
-            url, // URL already contains params
-            headers: headerRecord,
-            body,
-            timeout: 5000
-        };
+        let requestBody = "";
+        let formData: Record<string, FormDataPart> = {};
+        if (bodyType === "form-data") {
+            const formDataRecord: Record<string, FormDataPart> = {};
+            formDataItems.forEach(f => {
+                if (f.enabled && f.key) formDataRecord[f.key] = { value: f.value, isFile: f.isFile || false };
+            });
+
+            headerRecord['Content-Type'] = 'multipart/form-data';
+            return {
+                method,
+                url: finalUrl,
+                headers: headerRecord,
+                body: requestBody,
+                formData: formDataRecord,
+                timeout: 5000
+            };
+        } else if (bodyType === "x-www-form-urlencoded") {
+            const bodyParts = urlEncodedItems
+                .filter(f => f.enabled && f.key)
+                .map(f => `${encodeURIComponent(f.key)}=${encodeURIComponent(f.value)}`);
+            requestBody = bodyParts.join('&');
+            headerRecord['Content-Type'] = 'application/x-www-form-urlencoded';
+
+            return {
+                method,
+                url: finalUrl,
+                headers: headerRecord,
+                body: requestBody,
+                formData,
+                timeout: 5000
+            };
+        } else if (bodyType === "raw") {
+            return {
+                method,
+                url: finalUrl,
+                headers: headerRecord,
+                body: body,
+                formData,
+                timeout: 5000
+            };
+        } else {
+            return {
+                method,
+                url: finalUrl,
+                headers: headerRecord,
+                body: requestBody,
+                formData,
+                timeout: 5000
+            };
+        }
+    };
+
+
+    const handleBodyTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setBodyType(e.target.value);
+
     };
 
     return (
@@ -150,16 +219,31 @@ export function RequestPanel({ endpoint, onSend, onSave, onShowGenerateModal }: 
                 {activeTab === 'body' && (
                     <div className="body-editor">
                         <div className="radio-group">
-                            <label><input type="radio" name="bodyType" defaultChecked /> raw</label>
-                            <label><input type="radio" name="bodyType" disabled /> form-data</label>
-                            <label><input type="radio" name="bodyType" disabled /> x-www-form-urlencoded</label>
+                            <label><input type="radio" name="bodyType" defaultChecked onChange={handleBodyTypeChange} value="raw" /> raw</label>
+                            <label><input type="radio" name="bodyType" onChange={handleBodyTypeChange} value="form-data" /> form-data</label>
+                            <label><input type="radio" name="bodyType" onChange={handleBodyTypeChange} value="x-www-form-urlencoded" /> x-www-form-urlencoded</label>
                         </div>
                         <div className="editor-container">
-                            <textarea
-                                className="code-editor"
-                                value={body}
-                                onChange={e => setBody(e.target.value)}
-                            />
+                            {bodyType === "raw" ? (
+                                <textarea
+                                    className="code-editor"
+                                    value={body}
+                                    onChange={e => setBody(e.target.value)}
+                                />
+                            ) : bodyType === "form-data" ? (
+                                <KeyValueEditor
+                                    items={formDataItems}
+                                    onChange={setFormDataItems}
+                                    title="Form Data"
+                                    allowFileUpload={true}
+                                />
+                            ) : (
+                                <KeyValueEditor
+                                    items={urlEncodedItems}
+                                    onChange={setUrlEncodedItems}
+                                    title="x-www-form-urlencoded"
+                                />
+                            )}
                         </div>
                     </div>
                 )}

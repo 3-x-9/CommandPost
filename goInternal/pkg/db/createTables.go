@@ -27,3 +27,15 @@ func CreateHistoryTable(db *sql.DB) error {
 	}
 	return nil
 }
+
+func CreateEnvironmentsTable(db *sql.DB) error {
+	if _, err := db.Exec(`
+		CREATE TABLE IF NOT EXISTS environments (
+			name TEXT PRIMARY KEY,
+			variables TEXT
+		)
+	`); err != nil {
+		return err
+	}
+	return nil
+}

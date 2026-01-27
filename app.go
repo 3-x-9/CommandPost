@@ -39,11 +39,18 @@ func (a *App) startup(ctx context.Context) {
 	a.db = database
 	db.CreateCollectionsTable(a.db)
 	db.CreateHistoryTable(a.db)
+	db.CreateEnvironmentsTable(a.db)
 }
 
 func (a *App) SelectDirectory() (string, error) {
 	return runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select Output Directory",
+	})
+}
+
+func (a *App) SelectFile() (string, error) {
+	return runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Select File",
 	})
 }
 
@@ -153,4 +160,32 @@ func (a *App) LoadHistory() ([]pkg.HistoryRecord, error) {
 		return nil, err
 	}
 	return history, nil
+}
+
+func (a *App) GetEnvironments() ([]pkg.Environment, error) {
+	environments, err := pkg.GetEnvironments(a.db)
+	if err != nil {
+		return nil, err
+	}
+	return environments, nil
+}
+
+func (a *App) SaveEnvironment(env pkg.Environment) error {
+	err := pkg.SaveEnvironment(a.db, env)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *App) DeleteEnvironment(name string) error {
+	err := pkg.DeleteEnvironment(a.db, name)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *App) UploadFile(path string) ([]byte, error) {
+	return os.ReadFile(path)
 }

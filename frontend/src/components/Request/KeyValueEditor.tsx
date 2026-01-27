@@ -5,19 +5,27 @@ interface KeyValueEditorProps {
     items: KeyValueItem[];
     onChange: (items: KeyValueItem[]) => void;
     title?: string;
+    allowFileUpload?: boolean;
 }
 
-export function KeyValueEditor({ items, onChange, title }: KeyValueEditorProps) {
+export function KeyValueEditor({ items, onChange, title, allowFileUpload }: KeyValueEditorProps) {
     const handleUpdate = (id: string, field: keyof KeyValueItem, value: string | boolean) => {
         const newItems = items.map(item =>
             item.id === id ? { ...item, [field]: value } : item
         );
         onChange(newItems);
 
-        // Auto-add new row if editing the last one
         const lastItem = newItems[newItems.length - 1];
         if (lastItem && (lastItem.key || lastItem.value)) {
             addItem();
+        }
+    };
+
+    const handleFileSelect = (id: string, file: File | null) => {
+        if (file) {
+            // Store the file path/name in the value field
+            // In a real implementation, you'd handle the file upload here
+            handleUpdate(id, 'value', file.name);
         }
     };
 
@@ -29,7 +37,8 @@ export function KeyValueEditor({ items, onChange, title }: KeyValueEditorProps) 
                 key: "",
                 value: "",
                 description: "",
-                enabled: true
+                enabled: true,
+                isFile: false
             }
         ]);
     };
@@ -42,15 +51,16 @@ export function KeyValueEditor({ items, onChange, title }: KeyValueEditorProps) 
         <div className="key-value-editor">
             {title && <h4 className="editor-title">{title}</h4>}
             <div className="kv-table">
-                <div className="kv-header">
+                <div className={`kv-header ${allowFileUpload ? 'with-file-upload' : ''}`}>
                     <div className="kv-col-check"></div>
                     <div className="kv-col">Key</div>
+                    {allowFileUpload && <div className="kv-col-type">Type</div>}
                     <div className="kv-col">Value</div>
                     <div className="kv-col">Description</div>
                     <div className="kv-col-action"></div>
                 </div>
                 {items.map((item) => (
-                    <div key={item.id} className={`kv-row ${!item.enabled ? 'disabled' : ''}`}>
+                    <div key={item.id} className={`kv-row ${!item.enabled ? 'disabled' : ''} ${allowFileUpload ? 'with-file-upload' : ''}`}>
                         <div className="kv-col-check">
                             <input
                                 type="checkbox"
@@ -65,12 +75,31 @@ export function KeyValueEditor({ items, onChange, title }: KeyValueEditorProps) 
                                 onChange={(e) => handleUpdate(item.id, 'key', e.target.value)}
                             />
                         </div>
+                        {allowFileUpload && (
+                            <div className="kv-col-type">
+                                <select
+                                    className={"file-text-picker"}
+                                    value={item.isFile ? "file" : "text"}
+                                    onChange={(e) => handleUpdate(item.id, 'isFile', e.target.value === "file" ? true : false)}
+                                >
+                                    <option value="text">Text</option>
+                                    <option value="file">File</option>
+                                </select>
+                            </div>
+                        )}
                         <div className="kv-col">
-                            <input
-                                placeholder="Value"
-                                value={item.value}
-                                onChange={(e) => handleUpdate(item.id, 'value', e.target.value)}
-                            />
+                            {allowFileUpload && item.isFile ? (
+                                <input
+                                    type="file"
+                                    onChange={(e) => handleFileSelect(item.id, e.target.files?.[0] || null)}
+                                />
+                            ) : (
+                                <input
+                                    placeholder="Value"
+                                    value={item.value}
+                                    onChange={(e) => handleUpdate(item.id, 'value', e.target.value)}
+                                />
+                            )}
                         </div>
                         <div className="kv-col">
                             <input
