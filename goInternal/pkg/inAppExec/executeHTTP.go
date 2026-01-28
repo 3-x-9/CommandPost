@@ -49,6 +49,11 @@ func ExecuteHTTP(reqDat RequestData) (ResponseData, error) {
 		bodyReader = mimeWriter
 	}
 
+	if reqDat.Method == "GET" {
+		reqDat.Body = ""
+		reqDat.FormData = nil
+	}
+
 	req, err := http.NewRequest(reqDat.Method, reqDat.URL, bodyReader)
 	if err != nil {
 		return ResponseData{

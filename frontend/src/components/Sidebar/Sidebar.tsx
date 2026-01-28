@@ -1,5 +1,5 @@
 import { EndpointDef, Collection } from "../../types";
-import { Folder, FileText, ChevronRight, ChevronDown, History, Clock, Trash2, Database, Globe } from "lucide-react";
+import { Folder, FileText, ChevronRight, ChevronDown, History, Clock, Trash2, Database, Globe, FileUp } from "lucide-react";
 import { useState } from "react";
 
 interface SidebarProps {
@@ -10,6 +10,9 @@ interface SidebarProps {
     activeEndpoint: EndpointDef | null;
     onLoadSpec: (path: string) => void;
     onDeleteCollection?: (name: string) => void;
+    onImportCollection?: () => void;
+    onDeleteHistory?: (id: number) => void;
+    onDeleteAllHistory?: () => void;
     width?: number;
 }
 
@@ -19,6 +22,9 @@ export function Sidebar({
     activeEndpoint,
     onLoadSpec,
     onDeleteCollection,
+    onImportCollection,
+    onDeleteHistory,
+    onDeleteAllHistory,
     width,
     collections = [],
     historyItems = []
@@ -37,7 +43,6 @@ export function Sidebar({
         setExpandedTags(prev => ({ ...prev, [tag]: !prev[tag] }));
     };
 
-    // Filter and Group endpoints
     const filteredEndpoints = endpoints.filter(ep =>
         ep.path.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (ep.summary && ep.summary.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -106,12 +111,25 @@ export function Sidebar({
                             </div>
                         )}
 
-                        {/* Render Saved Collections Section */}
                         {filteredCollections.length > 0 && (
                             <div className="sidebar-section">
                                 <div className="sidebar-section-header">
-                                    <Database size={14} />
-                                    <span>Saved Collections</span>
+                                    <div className="section-title">
+                                        <Database size={14} />
+                                        <span>Saved Collections</span>
+                                    </div>
+                                    {onImportCollection && (
+                                        <button
+                                            className="btn-icon sm"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onImportCollection();
+                                            }}
+                                            title="Import Postman Collection"
+                                        >
+                                            <FileUp size={14} />
+                                        </button>
+                                    )}
                                 </div>
                                 {filteredCollections.map(col => (
                                     <div key={col.name} className="collection-card">
@@ -127,7 +145,7 @@ export function Sidebar({
                                                         className="btn-icon danger sm"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            if (confirm(`Delete collection "${col.name}"?`)) {
+                                                            if (onDeleteCollection) {
                                                                 onDeleteCollection(col.name);
                                                             }
                                                         }}
@@ -165,8 +183,10 @@ export function Sidebar({
                         {Object.keys(grouped).length > 0 && (
                             <div className="sidebar-section">
                                 <div className="sidebar-section-header">
-                                    <Globe size={14} />
-                                    <span>API Endpoints</span>
+                                    <div className="section-title">
+                                        <Globe size={14} />
+                                        <span>API Endpoints</span>
+                                    </div>
                                 </div>
                                 {Object.entries(grouped).map(([tag, eps]) => (
                                     <div key={tag} className="tag-group">
@@ -202,13 +222,25 @@ export function Sidebar({
                     </>
                 ) : (
                     <div className="history-list">
+                        <div className="history-header-actions">
+                            <span className="history-count">{historyItems.length} items</span>
+                            {historyItems.length > 0 && onDeleteAllHistory && (
+                                <button
+                                    className="btn-text danger sm"
+                                    onClick={onDeleteAllHistory}
+                                    title="Delete All History"
+                                >
+                                    <Trash2 size={12} /> Clear All
+                                </button>
+                            )}
+                        </div>
                         {historyItems.length === 0 && (
                             <div className="empty-sidebar">
                                 <span>No history yet</span>
                             </div>
                         )}
-                        {historyItems.map((item, i) => (
-                            <div key={i} className="history-item" onClick={() => {
+                        {historyItems.map((item) => (
+                            <div key={item.id} className="history-item" onClick={() => {
                                 onSelect({
                                     method: item.method,
                                     path: item.url,
@@ -217,6 +249,18 @@ export function Sidebar({
                                     tags: ['History']
                                 });
                             }}>
+                                <button
+                                    className="btn-icon danger sm"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (item.id !== undefined && onDeleteHistory) {
+                                            onDeleteHistory(item.id);
+                                        }
+                                    }}
+                                    title="Delete History Item"
+                                >
+                                    <Trash2 size={12} />
+                                </button>
                                 <div className="history-main">
                                     <span className={`method-badge ${item.method.toLowerCase()}`}>{item.method}</span>
                                     <span className="url-text">{item.url}</span>
@@ -228,8 +272,9 @@ export function Sidebar({
                             </div>
                         ))}
                     </div>
-                )}
-            </div>
-        </div>
+                )
+                }
+            </div >
+        </div >
     );
 }

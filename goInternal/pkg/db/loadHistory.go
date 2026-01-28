@@ -1,22 +1,24 @@
-package pkg
+package db
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 type HistoryRecord struct {
-	ID        int
-	Request   string
-	Response  string
-	Timestamp string
+	ID        int    `json:"id"`
+	Request   string `json:"request"`
+	Response  string `json:"response"`
+	Timestamp string `json:"timestamp"`
 }
 
 func LoadHistory(db *sql.DB) ([]HistoryRecord, error) {
-	rows, err := db.Query("SELECT id, request, response, timestamp FROM history ORDER BY timestamp DESC LIMIT 15")
+	rows, err := db.Query("SELECT id, request, response, timestamp FROM history ORDER BY id DESC LIMIT 15")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var history []HistoryRecord
+	history := []HistoryRecord{}
 	for rows.Next() {
 		var record HistoryRecord
 		if err := rows.Scan(&record.ID, &record.Request, &record.Response, &record.Timestamp); err != nil {

@@ -169,6 +169,13 @@ textarea:focus {
   letter-spacing: 0.05em;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
@@ -294,6 +301,7 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   background: var(--bg);
+  min-height: 0;
 }
 
 .workspace {
@@ -362,6 +370,7 @@ textarea:focus {
   margin-bottom: 1.5rem;
   align-items: center;
   width: 100%;
+  min-width: 0;
 }
 
 .method-select {
@@ -376,6 +385,7 @@ textarea:focus {
   height: 40px;
   font-family: monospace;
   font-size: 0.95rem !important;
+  min-width: 0;
 }
 
 .request-bar .btn {
@@ -440,6 +450,7 @@ textarea:focus {
   grid-template-columns: 40px 1fr 1fr 1.5fr 40px;
   gap: 0.5rem;
   align-items: center;
+  min-width: 0;
 }
 
 .kv-row.with-file-upload {
@@ -659,6 +670,7 @@ textarea:focus {
 
 .response-header {
   display: flex;
+  flex: 1;
   justify-content: space-between;
   align-items: center;
   padding-bottom: 1rem;
@@ -670,6 +682,12 @@ textarea:focus {
   font-weight: 800;
   font-size: 0.75rem;
   color: #fff;
+}
+
+.meta-text {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
 }
 
 .status-badge.success {
@@ -814,6 +832,30 @@ textarea:focus {
 .btn-text:hover {
   text-decoration: underline;
   opacity: 0.8;
+}
+
+.btn-text.danger {
+  color: var(--danger);
+}
+
+.btn-text.sm {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.history-header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.history-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 /* Modals */

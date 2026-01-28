@@ -23,8 +23,6 @@ export function KeyValueEditor({ items, onChange, title, allowFileUpload }: KeyV
 
     const handleFileSelect = (id: string, file: File | null) => {
         if (file) {
-            // Store the file path/name in the value field
-            // In a real implementation, you'd handle the file upload here
             handleUpdate(id, 'value', file.name);
         }
     };

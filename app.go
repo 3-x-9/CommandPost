@@ -19,8 +19,9 @@ import (
 
 // App struct
 type App struct {
-	ctx context.Context
-	db  *sql.DB
+	ctx    context.Context
+	db     *sql.DB
+	dbChan chan db.DbQuery
 }
 
 // NewApp creates a new App application struct
@@ -37,6 +38,13 @@ func (a *App) startup(ctx context.Context) {
 		log.Fatal(err)
 	}
 	a.db = database
+
+	a.db.Exec("PRAGMA journal_mode=WAL;")
+	a.db.Exec("PRAGMA busy_timeout=5000;")
+	a.db.SetMaxOpenConns(1)
+
+	a.dbChan = make(chan db.DbQuery, 100)
+	go db.DbWorker(a.db, a.dbChan)
 	db.CreateCollectionsTable(a.db)
 	db.CreateHistoryTable(a.db)
 	db.CreateEnvironmentsTable(a.db)
@@ -122,16 +130,16 @@ func (a *App) ExecuteRequest(req pkg.RequestData) (pkg.ResponseData, error) {
 	return response, nil
 }
 
-func (a *App) SaveCollection(name string, requests []pkg.RequestData) error {
-	err := pkg.SaveCollection(a.db, name, requests)
-	if err != nil {
-		return err
-	}
-	return nil
+func (a *App) ImportCollections(path string) (*db.PostmanCollection, error) {
+	return db.ImportCollections(a.dbChan, path)
 }
 
-func (a *App) LoadCollection() ([]pkg.Collection, error) {
-	collections, err := pkg.LoadCollections(a.db)
+func (a *App) SaveCollection(name string, requests []pkg.RequestData) error {
+	return db.SaveCollection(a.dbChan, name, requests)
+}
+
+func (a *App) LoadCollection() ([]db.Collection, error) {
+	collections, err := db.LoadCollections(a.db)
 	if err != nil {
 		return nil, err
 	}
@@ -139,53 +147,49 @@ func (a *App) LoadCollection() ([]pkg.Collection, error) {
 }
 
 func (a *App) DeleteCollection(name string) error {
-	err := pkg.DeleteCollection(a.db, name)
-	if err != nil {
-		return err
-	}
-	return nil
+	return db.DeleteCollection(a.dbChan, name)
 }
 
 func (a *App) SaveHistory(req pkg.RequestData, res pkg.ResponseData) error {
-	err := pkg.SaveHistory(a.db, req, res)
-	if err != nil {
-		return err
-	}
-	return nil
+	return db.SaveHistory(a.dbChan, req, res)
 }
 
-func (a *App) LoadHistory() ([]pkg.HistoryRecord, error) {
-	history, err := pkg.LoadHistory(a.db)
+func (a *App) DeleteHistoryItem(id int) error {
+	return db.DeleteHistoryItem(a.dbChan, id)
+}
+
+func (a *App) LoadHistory() ([]db.HistoryRecord, error) {
+	history, err := db.LoadHistory(a.db)
 	if err != nil {
 		return nil, err
 	}
 	return history, nil
 }
 
-func (a *App) GetEnvironments() ([]pkg.Environment, error) {
-	environments, err := pkg.GetEnvironments(a.db)
+func (a *App) GetEnvironments() ([]db.Environment, error) {
+	environments, err := db.GetEnvironments(a.db)
 	if err != nil {
 		return nil, err
 	}
 	return environments, nil
 }
 
-func (a *App) SaveEnvironment(env pkg.Environment) error {
-	err := pkg.SaveEnvironment(a.db, env)
-	if err != nil {
-		return err
-	}
-	return nil
+func (a *App) SaveEnvironment(env db.Environment) error {
+	return db.SaveEnvironment(a.dbChan, env)
 }
 
 func (a *App) DeleteEnvironment(name string) error {
-	err := pkg.DeleteEnvironment(a.db, name)
-	if err != nil {
-		return err
-	}
-	return nil
+	return db.DeleteEnvironment(a.dbChan, name)
 }
 
 func (a *App) UploadFile(path string) ([]byte, error) {
 	return os.ReadFile(path)
+}
+
+func (a *App) DeleteHistory() error {
+	return db.DeleteHistory(a.dbChan)
+}
+
+func (a *App) ExportHistory(path string) error {
+	return db.ExportHistory(a.db, path)
 }

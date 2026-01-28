@@ -8,12 +8,17 @@ interface CodeHighlighterProps {
 export function CodeHighlighter({ code, language = "json" }: CodeHighlighterProps) {
 
     const highlightedCode = useMemo(() => {
-        if (language !== "json") return code;
+        // Always escape HTML to prevent CSS/JS injection from response bodies
+        const escapedCode = code
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        if (language !== "json") return escapedCode;
 
         try {
-            // Very basic JSON highlighting logic
-            const json = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+            // Very basic JSON highlighting logic on escaped code
+            return escapedCode.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
                 let cls = 'number';
                 if (/^"/.test(match)) {
                     if (/:$/.test(match)) {
@@ -29,7 +34,7 @@ export function CodeHighlighter({ code, language = "json" }: CodeHighlighterProp
                 return '<span class="' + cls + '">' + match + '</span>';
             });
         } catch (e) {
-            return code;
+            return escapedCode;
         }
     }, [code, language]);
 

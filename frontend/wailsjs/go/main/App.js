@@ -10,8 +10,20 @@ export function DeleteEnvironment(arg1) {
   return window['go']['main']['App']['DeleteEnvironment'](arg1);
 }
 
+export function DeleteHistory() {
+  return window['go']['main']['App']['DeleteHistory']();
+}
+
+export function DeleteHistoryItem(arg1) {
+  return window['go']['main']['App']['DeleteHistoryItem'](arg1);
+}
+
 export function ExecuteRequest(arg1) {
   return window['go']['main']['App']['ExecuteRequest'](arg1);
+}
+
+export function ExportHistory(arg1) {
+  return window['go']['main']['App']['ExportHistory'](arg1);
 }
 
 export function Generate(arg1, arg2, arg3) {
@@ -24,6 +36,10 @@ export function GetAuthInfo(arg1) {
 
 export function GetEnvironments() {
   return window['go']['main']['App']['GetEnvironments']();
+}
+
+export function ImportCollections(arg1) {
+  return window['go']['main']['App']['ImportCollections'](arg1);
 }
 
 export function LoadCollection() {

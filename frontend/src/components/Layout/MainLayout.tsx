@@ -8,7 +8,8 @@ import { GenerateCLIModal } from "../CLI/GenerateCLIModal";
 import { EnvironmentSwitcher } from "../Environment/EnvironmentSwitcher";
 import {
     ParseSpecDetails, ExecuteRequest, LoadCollection, SaveHistory, SaveCollection, DeleteCollection, Generate,
-    SelectDirectory, LoadHistory, GetEnvironments, SaveEnvironment, DeleteEnvironment
+    SelectDirectory, LoadHistory, GetEnvironments, SaveEnvironment, DeleteEnvironment, DeleteHistoryItem, DeleteHistory,
+    ImportCollections, SelectFile
 } from "../../../wailsjs/go/main/App"
 import { Collection, Environment } from "../../types";
 
@@ -89,16 +90,22 @@ export function MainLayout() {
             const data = await LoadHistory();
             if (data) {
                 const formattedHistory = data.map((item: any) => {
-                    const req = JSON.parse(item.Request);
-                    const res = JSON.parse(item.Response);
+                    let req: any = { method: "???", url: "???" };
+                    let res: any = { statusCode: 0 };
+                    try { req = JSON.parse(item.request || "{}"); } catch (e) { }
+                    try { res = JSON.parse(item.response || "{}"); } catch (e) { }
+
                     return {
-                        method: req.method,
-                        url: req.url,
-                        status: res.statusCode,
-                        time: new Date(item.Timestamp).toLocaleTimeString()
+                        id: item.id,
+                        method: req.method || "GET",
+                        url: req.url || "",
+                        status: res.statusCode || 0,
+                        time: item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : "Unknown"
                     };
                 });
                 setHistory(formattedHistory);
+            } else {
+                setHistory([]);
             }
         } catch (err) {
             console.error("Failed to load history:", err);
@@ -111,32 +118,17 @@ export function MainLayout() {
             let req = { ...requestData };
             const currentBaseUrl = activeEnv?.variables?.baseUrl || baseUrl;
 
-            // Prepend base URL if available and URL is relative
             if (currentBaseUrl && !req.url.startsWith('http')) {
-                // Ensure we don't end up with double slashes
                 const cleanBase = currentBaseUrl.endsWith('/') ? currentBaseUrl.slice(0, -1) : currentBaseUrl;
                 const cleanPath = req.url.startsWith('/') ? req.url : '/' + req.url;
                 req.url = cleanBase + cleanPath;
             }
-            // Ensure body passed to backend is a string for now, to match current Go implementation
-            const backendReq = {
-                ...req,
-                body: typeof req.body === 'string' ? req.body : "{}" // Placeholder for FormData handling
-            };
-
+            const backendReq = { ...req }
             const res = await ExecuteRequest(backendReq as any);
             setResponse(res);
 
-            // Save to history in DB
             await SaveHistory(backendReq as any, res);
-
-            // Update local history list (optimistic or just push)
-            setHistory(prev => [{
-                method: req.method,
-                url: req.url,
-                status: res.statusCode,
-                time: "Just now"
-            }, ...prev]);
+            await loadHistoryFromDB();
 
         } catch (err) {
             console.error(err);
@@ -150,7 +142,6 @@ export function MainLayout() {
             const existing = collections.find(c => c.name === collectionName);
             const requests = existing ? [...existing.requests, requestData] : [requestData];
 
-            // Ensure all request bodies are strings for DB storage
             const formattedRequests = requests.map(r => ({
                 ...r,
                 body: typeof r.body === 'string' ? r.body : "{}"
@@ -169,6 +160,25 @@ export function MainLayout() {
             await loadCollectionsFromDB();
         } catch (err) {
             console.error("Failed to delete collection:", err);
+        }
+    };
+
+    const handleDeleteHistory = async (id: number) => {
+        try {
+            await DeleteHistoryItem(id);
+            await loadHistoryFromDB();
+        } catch (err) {
+            console.error("Failed to delete history item:", err);
+        }
+    };
+
+    const handleDeleteAllHistory = async () => {
+        if (!confirm("Are you sure you want to clear all history?")) return;
+        try {
+            await DeleteHistory();
+            await loadHistoryFromDB();
+        } catch (err) {
+            console.error("Failed to delete all history:", err);
         }
     };
 
@@ -217,17 +227,32 @@ export function MainLayout() {
         };
     }, [isResizing]);
 
+    const handleImportCollection = async () => {
+        try {
+            const path = await SelectFile();
+            if (!path) return;
+
+            await ImportCollections(path);
+            await loadCollectionsFromDB();
+        } catch (err) {
+            console.error("Failed to import collection:", err);
+        }
+    };
+
     return (
         <div className="main-layout" style={{ cursor: isResizing ? 'col-resize' : 'default', userSelect: isResizing ? 'none' : 'auto' }}>
             <Sidebar
                 endpoints={endpoints}
                 onSelect={(ep) => {
                     setActiveEndpoint(ep);
-                    setResponse(null); // Clear previous response
+                    setResponse(null); // null previous response
                 }}
                 activeEndpoint={activeEndpoint}
                 onLoadSpec={loadSpec}
                 onDeleteCollection={handleDeleteCollection}
+                onImportCollection={handleImportCollection}
+                onDeleteHistory={handleDeleteHistory}
+                onDeleteAllHistory={handleDeleteAllHistory}
                 width={sidebarWidth}
                 historyItems={history}
                 collections={collections}

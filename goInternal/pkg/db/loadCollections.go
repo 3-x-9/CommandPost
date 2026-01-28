@@ -1,13 +1,14 @@
-package pkg
+package db
 
 import (
+	pkg "CommandPost/goInternal/pkg/inAppExec"
 	"database/sql"
 	"encoding/json"
 )
 
 type Collection struct {
-	Name     string        `json:"name"`
-	Requests []RequestData `json:"requests"`
+	Name     string            `json:"name"`
+	Requests []pkg.RequestData `json:"requests"`
 }
 
 func LoadCollections(db *sql.DB) ([]Collection, error) {
