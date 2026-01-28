@@ -1,60 +1,80 @@
-# CommandPost 🚀
+# CommandPost
 
-CommandPost is a modern, cross-platform API development environment that bridges the gap between interactive API testing (like Postman) and automated CLI generation. Built with **Wails (Go)** and **React (TypeScript)**, it provides a premium developer experience for designing, testing, and graduates API interactions into standalone CLI tools.
+**CommandPost** is a modern, high-performance API development environment designed to bridge the gap between interactive API exploration and automated CLI generation. Built with **Wails (Go)** and **React (TypeScript)**, it provides a premium developer experience for designing, testing, and graduates API interactions into production-ready standalone CLI tools.
 
-## ✨ Features
+---
 
-### 🛠 Interactive API Workspace
-- **OpenAPI Integration**: Load specifications via URL or local file (`JSON/YAML`).
-- **Full Request Builder**: Support for Query Params, Headers, and Request Bodies.
-- **Built-in Auth**: Support for Bearer Tokens and Basic Authentication (with more coming soon).
-- **Responsive Layout**: Resizable sidebar and modern dark-mode aesthetic.
+## Key Features
 
-### 📜 History & Collections
-- **Persistent History**: Every request is saved to a local SQLite database and survives application restarts.
-- **Saved Collections**: Organize your most-used requests into custom folders.
-- **Quick Replay**: Re-run any request from your history or collections with one click.
+###  Interactive API Workspace
+- **OpenAPI 3.0 Integration**: Load specifications instantly via remote URL or local file (`JSON/YAML`).
+- **Complete Request Builder**: Support for all HTTP methods (GET, POST, PUT, DELETE, PATCH) with full control over Query Params, Headers, and Request Bodies.
+- **Advanced Authentication**: Built-in support for Bearer Tokens, Basic Auth, and API Keys (Header/Query).
+- **Responsive Design**: Modern, dark-mode aesthetic with a resizable sidebar and intuitive layout.
 
-### 🏎 CLI Generation (Pro Feature)
-- **Live Preview**: See a real-time preview of the equivalent CLI command as you build your request.
-- **Standalone CLI Scaffolding**: Generate a complete, production-ready Go CLI from your OpenAPI spec.
-  - Subcommands organized by tags.
-  - Flag validation and environment variable support.
-  - Built-in error handling and auth support.
+### Production-Ready CLI Generation
+- **Live Preview**: See a real-time preview of the equivalent CLI command as you build your request in the UI.
+- **Cobra-Powered Scaffolding**: Generate complete, standalone Go source code for CLI tools directly from your OpenAPI spec.
+- **Smart Organization**: Generated commands follow your spec's tags, with built-in validation, bash completion support, and environment variable overrides.
 
-## 🚀 Getting Started
+### History & Collections
+- **Persistent Storage**: Every request and response is automatically saved to a local SQLite database using a high-concurrency WAL mode configuration.
+- **Recursive Postman Import**: Seamlessly transition from Postman with full support for nested folders and complex collection structures.
+- **Quick Replay**: Instantly re-run any request from your persistent history or saved collections.
+
+### Environment Management
+- **Switchable Contexts**: Manage multiple environments (Dev, Staging, Prod) with specific Base URLs and variables.
+- **Dynamic Path Resolution**: Effortlessly switch between environment-specific targets without re-configuring your requests.
+
+---
+
+##  Tech Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Framework** | [Wails v2](https://wails.io/) |
+| **Backend** | Go 1.24.0, SQLite (modernc.org/sqlite) |
+| **Frontend** | React 18, TypeScript, Vite |
+| **Icons & UI** | Lucide React, Custom Vanilla CSS |
+
+---
+
+## Getting Started
 
 ### Prerequisites
-- [Go](https://golang.org/doc/install) (1.21+)
+- [Go](https://golang.org/doc/install) (1.24+)
 - [Node.js](https://nodejs.org/) & [NPM](https://www.npmjs.com/)
 - [Wails CLI](https://wails.io/docs/gettingstarted/installation)
 
-### Installation
-1. Clone the repository:
+### Installation & Development
+1. **Clone & Setup**:
    ```bash
    git clone https://github.com/3-x-9/CommandPost.git
    cd CommandPost
    ```
-2. Run in development mode:
+2. **Launch Dev Environment**:
    ```bash
    wails dev
    ```
-3. To build a production binary:
+3. **Build Binary**:
    ```bash
    wails build
    ```
 
-## 🛠 Project Structure
-- `app.go`: Main Wails bridge logic (Go).
-- `goInternal/`: Core backend logic, including the CLI generator and storage.
-- `frontend/`: React source code (TypeScript/CSS).
-- `frontend/src/components/`: Modular UI components (Layout, Request, Response, Sidebar, etc.).
+---
 
-## 🤝 Contributing
-Contributions are welcome! Whether it's adding new auth types, improving the generator templates, or polishing the UI, feel free to open a PR.
+## Architecture
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+CommandPost is engineered for stability and performance:
+
+- **Single Writer Pattern**: To prevent SQLite "database is locked" errors during high-concurrency scenarios, all database mutations are dispatched through a centralized Go channel (`dbChan`) and processed sequentially by a dedicated background worker.
+- **WAL Mode**: SQLite is configured in **Write-Ahead Logging** mode to allow simultaneous reads while the worker is writing, ensuring the UI remains responsive at all times.
+- **Wails Bridge**: Leverages native OS bindings for file selection, directory dialogs, and low-latency communication between the Go runtime and the React frontend.
 
 ---
-Built with ❤️ by [3-x-9](https://github.com/3-x-9)
+
+## Author
+**3-x-9** - [GitHub](https://github.com/3-x-9)
+
+## License
+This project is licensed under the MIT License.
