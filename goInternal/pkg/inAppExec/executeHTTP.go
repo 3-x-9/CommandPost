@@ -9,28 +9,6 @@ import (
 	"time"
 )
 
-type FormDataPart struct {
-	Value  string `json:"value"`
-	IsFile bool   `json:"isFile"`
-}
-
-type RequestData struct {
-	Method   string                  `json:"method"`
-	URL      string                  `json:"url"`
-	Headers  map[string]string       `json:"headers"`
-	Body     string                  `json:"body"`
-	FormData map[string]FormDataPart `json:"formData"`
-	Timeout  int                     `json:"timeout"`
-}
-
-type ResponseData struct {
-	StatusCode int               `json:"statusCode"`
-	Headers    map[string]string `json:"headers"`
-	Body       string            `json:"body"`
-	TimeMs     int64             `json:"timeMs"`
-	Size       int               `json:"size"`
-}
-
 func ExecuteHTTP(reqDat RequestData) (ResponseData, error) {
 	var bodyReader io.Reader
 	if reqDat.Body != "" {

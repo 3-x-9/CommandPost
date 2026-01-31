@@ -46,15 +46,12 @@ export function RequestPanel({ endpoint, onSend, onSave, onShowGenerateModal }: 
         setBody("{}");
     }, [endpoint]);
 
-    // Sync Params to URL (Simple implementation)
     useEffect(() => {
         // This is a one-way sync for now: Params -> URL
         // In a full implementation, we would want 2-way sync
 
-        // 1. Parse current URL to get base
         const currentUrl = url.split('?')[0];
 
-        // 2. Build query string from enabled params
         const queryParts = params
             .filter(p => p.enabled && p.key)
             .map(p => `${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`);
@@ -65,10 +62,8 @@ export function RequestPanel({ endpoint, onSend, onSave, onShowGenerateModal }: 
                 setUrl(newUrl);
             }
         } else if (url.includes('?')) {
-            // If we have no params but URL has query, and we just deleted them... 
-            // This logic is tricky if we don't have 2-way sync. 
-            // Let's safe guard: Only update if we are strictly adding params?
-            // Actually, checking if we *originated* this change prevents loops (React handles this mostly)
+            // If we have no params but URL has query, and just deleted them...
+            // checking if we *originated* this change prevents loops (React handles this mostly)
         }
     }, [params]);
 
@@ -105,8 +100,12 @@ export function RequestPanel({ endpoint, onSend, onSave, onShowGenerateModal }: 
             }
         } else if (auth.type === 'oauth' && auth.oauthToken) {
             headerRecord['Authorization'] = `Bearer ${auth.oauthToken}`;
-        } else if (auth.type === 'oauth2' && auth.oauth2Token) {
-            headerRecord['Authorization'] = `Bearer ${auth.oauth2Token}`;
+        } else if (auth.type === 'oauth2') {
+            const prefix = auth.oauth2Config?.headerPrefix || 'Bearer';
+            const token = auth.oauth2Config?.accessToken;
+            if (token) {
+                headerRecord['Authorization'] = `${prefix} ${token}`;
+            }
         }
 
         let requestBody = "";

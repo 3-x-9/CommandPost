@@ -5,14 +5,8 @@ import (
 	"encoding/json"
 )
 
-type Environment struct {
-	Name      string            `json:"name"`
-	Variables map[string]string `json:"variables"`
-}
-
 func GetEnvironments(db *sql.DB) ([]Environment, error) {
-
-	rows, err := db.Query(`SELECT name, variables FROM environments`)
+	rows, err := db.Query(`SELECT name, base_url, access_token, refresh_token, expires_at, auth_url, token_url, client_id, client_secret, redirect_uri, scope, variables, created_at, last_used, oauth2_config FROM environments`)
 	if err != nil {
 		return nil, err
 	}
@@ -22,7 +16,23 @@ func GetEnvironments(db *sql.DB) ([]Environment, error) {
 	for rows.Next() {
 		var environment Environment
 		var variables []byte
-		if err := rows.Scan(&environment.Name, &variables); err != nil {
+		if err := rows.Scan(
+			&environment.Name,
+			&environment.BaseURL,
+			&environment.AccessToken,
+			&environment.RefreshToken,
+			&environment.ExpiresAt,
+			&environment.AuthURL,
+			&environment.TokenURL,
+			&environment.ClientID,
+			&environment.ClientSecret,
+			&environment.RedirectURI,
+			&environment.Scope,
+			&variables,
+			&environment.CreatedAt,
+			&environment.LastUsed,
+			&environment.OAuth2Config,
+		); err != nil {
 			continue
 		}
 		if err := json.Unmarshal(variables, &environment.Variables); err != nil {

@@ -3,6 +3,7 @@
 import {pkg} from '../models';
 import {generator} from '../models';
 import {db} from '../models';
+import {frontend} from '../models';
 
 export function DeleteCollection(arg1:string):Promise<void>;
 
@@ -13,6 +14,8 @@ export function DeleteHistory():Promise<void>;
 export function DeleteHistoryItem(arg1:number):Promise<void>;
 
 export function ExecuteRequest(arg1:pkg.RequestData):Promise<pkg.ResponseData>;
+
+export function ExportCollection(arg1:string,arg2:string):Promise<void>;
 
 export function ExportHistory(arg1:string):Promise<void>;
 
@@ -30,9 +33,13 @@ export function LoadHistory():Promise<Array<db.HistoryRecord>>;
 
 export function ParseSpecDetails(arg1:string):Promise<pkg.SpecDetails>;
 
+export function PerformOAuthFlow(arg1:db.Environment):Promise<db.Environment>;
+
 export function SaveCollection(arg1:string,arg2:Array<pkg.RequestData>):Promise<void>;
 
 export function SaveEnvironment(arg1:db.Environment):Promise<void>;
+
+export function SaveFileDialog(arg1:string,arg2:string,arg3:Array<frontend.FileFilter>):Promise<string>;
 
 export function SaveHistory(arg1:pkg.RequestData,arg2:pkg.ResponseData):Promise<void>;
 

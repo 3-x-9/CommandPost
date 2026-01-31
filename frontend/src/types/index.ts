@@ -56,10 +56,43 @@ export interface AuthConfig {
     apiKeyKey?: string;
     apiKeyIn?: 'header' | 'query';
     oauthToken?: string;
-    oauth2Token?: string;
+    oauth2Token?: string; // Legacy
+
+    // Comprehensive OAuth2 fields
+    oauth2Config?: {
+        accessToken?: string;
+        headerPrefix?: string;
+        autoRefreshToken?: boolean;
+        shareToken?: boolean;
+
+        tokenName?: string;
+        grantType?: string;
+        callbackUrl?: string;
+        authUrl?: string;
+        accessTokenUrl?: string;
+        clientId?: string;
+        clientSecret?: string;
+        scope?: string;
+        state?: string;
+        clientAuth?: 'basic' | 'body';
+    }
 }
 
 export interface Environment {
     name: string;
+    base_url: string;
+    access_token: string;
+    refresh_token: string;
+    expires_at: string;
+    auth_url: string;
+    token_url: string;
+    client_id: string;
+    client_secret: string;
+    redirect_uri: string;
+    scope: string;
     variables: Record<string, string>;
+    created_at: string;
+    last_used: string;
+    oauth2Config?: AuthConfig['oauth2Config'];
+    oauth2_config: string;
 }

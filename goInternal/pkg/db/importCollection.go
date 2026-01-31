@@ -7,46 +7,6 @@ import (
 	"os"
 )
 
-type PostmanCollection struct {
-	Info Info   `json:"info"`
-	Item []Item `json:"item"`
-}
-
-type Info struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Schema      string `json:"schema"`
-}
-
-type Item struct {
-	Name     string   `json:"name"`
-	Request  *Request `json:"request,omitempty"`
-	Response []any    `json:"response"`
-	Item     []Item   `json:"item,omitempty"`
-}
-
-type Request struct {
-	Method      string `json:"method"`
-	URL         URL    `json:"url"`
-	Header      []KV   `json:"header"`
-	Body        *Body  `json:"body"`
-	Description string `json:"description"`
-}
-
-type URL struct {
-	Raw string `json:"raw"`
-}
-
-type KV struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
-type Body struct {
-	Mode string `json:"mode"`
-	Raw  string `json:"raw,omitempty"`
-}
-
 func ImportCollections(dbChan chan<- DbQuery, path string) (*PostmanCollection, error) {
 	file, err := os.ReadFile(path)
 	if err != nil {

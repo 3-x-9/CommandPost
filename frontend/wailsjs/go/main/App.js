@@ -22,6 +22,10 @@ export function ExecuteRequest(arg1) {
   return window['go']['main']['App']['ExecuteRequest'](arg1);
 }
 
+export function ExportCollection(arg1, arg2) {
+  return window['go']['main']['App']['ExportCollection'](arg1, arg2);
+}
+
 export function ExportHistory(arg1) {
   return window['go']['main']['App']['ExportHistory'](arg1);
 }
@@ -54,12 +58,20 @@ export function ParseSpecDetails(arg1) {
   return window['go']['main']['App']['ParseSpecDetails'](arg1);
 }
 
+export function PerformOAuthFlow(arg1) {
+  return window['go']['main']['App']['PerformOAuthFlow'](arg1);
+}
+
 export function SaveCollection(arg1, arg2) {
   return window['go']['main']['App']['SaveCollection'](arg1, arg2);
 }
 
 export function SaveEnvironment(arg1) {
   return window['go']['main']['App']['SaveEnvironment'](arg1);
+}
+
+export function SaveFileDialog(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SaveFileDialog'](arg1, arg2, arg3);
 }
 
 export function SaveHistory(arg1, arg2) {

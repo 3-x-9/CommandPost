@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { AuthConfig } from "../../types";
 
+import { OAuth2Panel } from "./OAuth2Panel";
+
 interface AuthPanelProps {
     auth: AuthConfig;
     onChange: (auth: AuthConfig) => void;
@@ -27,6 +29,7 @@ export function AuthPanel({ auth, onChange }: AuthPanelProps) {
                     <option value="bearer">Bearer Token</option>
                     <option value="basic">Basic Auth</option>
                     <option value="api_key">API Key</option>
+                    <option value="oauth2">OAuth 2.0</option>
                 </select>
             </div>
 
@@ -121,6 +124,20 @@ export function AuthPanel({ auth, onChange }: AuthPanelProps) {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {auth.type === 'oauth2' && (
+                <OAuth2Panel
+                    config={auth.oauth2Config || {
+                        headerPrefix: 'Bearer',
+                        autoRefreshToken: true,
+                        shareToken: false,
+                        grantType: 'authorization_code',
+                        callbackUrl: 'http://your-application.com/registered/callback',
+                        clientAuth: 'basic'
+                    }}
+                    onChange={(config) => onChange({ ...auth, oauth2Config: config })}
+                />
             )}
 
             {auth.type === 'none' && (

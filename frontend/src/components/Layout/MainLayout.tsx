@@ -9,7 +9,7 @@ import { EnvironmentSwitcher } from "../Environment/EnvironmentSwitcher";
 import {
     ParseSpecDetails, ExecuteRequest, LoadCollection, SaveHistory, SaveCollection, DeleteCollection, Generate,
     SelectDirectory, LoadHistory, GetEnvironments, SaveEnvironment, DeleteEnvironment, DeleteHistoryItem, DeleteHistory,
-    ImportCollections, SelectFile
+    ImportCollections, SelectFile, ExportHistory, ExportCollection, SaveFileDialog
 } from "../../../wailsjs/go/main/App"
 import { Collection, Environment } from "../../types";
 
@@ -60,7 +60,7 @@ export function MainLayout() {
     const loadEnvironmentsFromDB = async () => {
         try {
             const data = await GetEnvironments();
-            setEnvironments(data || []);
+            setEnvironments((data as any) || []);
         } catch (err) {
             console.error("Failed to load environments:", err);
         }
@@ -239,6 +239,28 @@ export function MainLayout() {
         }
     };
 
+    const handleExportHistory = async () => {
+        try {
+            const path = await SaveFileDialog(`Export History`, `history.json`,
+                [{ DisplayName: "JSON Files", Pattern: "*.json" }]);
+            if (!path) return;
+            await ExportHistory(path);
+        } catch (err) {
+            console.error("Failed to export history:", err);
+        }
+    };
+
+    const handleExportCollection = async (name: string) => {
+        try {
+            const path = await SaveFileDialog(`Export Collection: ${name}`, `${name}.json`,
+                [{ DisplayName: "JSON Files", Pattern: "*.json" }]);
+            if (!path) return;
+            await ExportCollection(name, path);
+        } catch (err) {
+            console.error("Failed to export collection:", err);
+        }
+    };
+
     return (
         <div className="main-layout" style={{ cursor: isResizing ? 'col-resize' : 'default', userSelect: isResizing ? 'none' : 'auto' }}>
             <Sidebar
@@ -251,6 +273,8 @@ export function MainLayout() {
                 onLoadSpec={loadSpec}
                 onDeleteCollection={handleDeleteCollection}
                 onImportCollection={handleImportCollection}
+                onExportCollection={handleExportCollection}
+                onExportHistory={handleExportHistory}
                 onDeleteHistory={handleDeleteHistory}
                 onDeleteAllHistory={handleDeleteAllHistory}
                 width={sidebarWidth}

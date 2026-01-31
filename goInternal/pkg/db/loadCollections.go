@@ -1,15 +1,9 @@
 package db
 
 import (
-	pkg "CommandPost/goInternal/pkg/inAppExec"
 	"database/sql"
 	"encoding/json"
 )
-
-type Collection struct {
-	Name     string            `json:"name"`
-	Requests []pkg.RequestData `json:"requests"`
-}
 
 func LoadCollections(db *sql.DB) ([]Collection, error) {
 	rows, err := db.Query(`SELECT name, requests FROM collections`)

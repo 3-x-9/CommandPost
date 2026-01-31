@@ -53,6 +53,8 @@ export function CLIPreview({ method, path, headers, params, auth, body, onShowGe
         // Auth
         if (auth.type === 'bearer' && auth.bearerToken) {
             cmd += ` --token "${auth.bearerToken}"`;
+        } else if (auth.type === 'oauth2' && auth.oauth2Config?.accessToken) {
+            cmd += ` --token "${auth.oauth2Config.accessToken}"`;
         } else if (auth.type === 'basic') {
             cmd += ` --user "${auth.basicUsername}:${auth.basicPassword}"`;
         }

@@ -1,5 +1,5 @@
 import { EndpointDef, Collection } from "../../types";
-import { Folder, FileText, ChevronRight, ChevronDown, History, Clock, Trash2, Database, Globe, FileUp } from "lucide-react";
+import { Folder, FileText, ChevronRight, ChevronDown, History, Clock, Trash2, Database, Globe, FileUp, Download } from "lucide-react";
 import { useState } from "react";
 
 interface SidebarProps {
@@ -11,6 +11,8 @@ interface SidebarProps {
     onLoadSpec: (path: string) => void;
     onDeleteCollection?: (name: string) => void;
     onImportCollection?: () => void;
+    onExportCollection?: (name: string) => void;
+    onExportHistory?: () => void;
     onDeleteHistory?: (id: number) => void;
     onDeleteAllHistory?: () => void;
     width?: number;
@@ -23,6 +25,8 @@ export function Sidebar({
     onLoadSpec,
     onDeleteCollection,
     onImportCollection,
+    onExportCollection,
+    onExportHistory,
     onDeleteHistory,
     onDeleteAllHistory,
     width,
@@ -140,6 +144,18 @@ export function Sidebar({
                                             </div>
                                             <div className="collection-actions">
                                                 <span className="count-badge">{col.requests.length}</span>
+                                                {onExportCollection && (
+                                                    <button
+                                                        className="btn-icon sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onExportCollection(col.name);
+                                                        }}
+                                                        title="Export Collection"
+                                                    >
+                                                        <Download size={12} />
+                                                    </button>
+                                                )}
                                                 {onDeleteCollection && (
                                                     <button
                                                         className="btn-icon danger sm"
@@ -223,7 +239,18 @@ export function Sidebar({
                 ) : (
                     <div className="history-list">
                         <div className="history-header-actions">
-                            <span className="history-count">{historyItems.length} items</span>
+                            <div className="history-info">
+                                <span className="history-count">{historyItems.length} items</span>
+                                {onExportHistory && historyItems.length > 0 && (
+                                    <button
+                                        className="btn-icon sm"
+                                        onClick={onExportHistory}
+                                        title="Export History"
+                                    >
+                                        <Download size={14} />
+                                    </button>
+                                )}
+                            </div>
                             {historyItems.length > 0 && onDeleteAllHistory && (
                                 <button
                                     className="btn-text danger sm"

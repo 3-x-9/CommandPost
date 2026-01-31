@@ -48,7 +48,20 @@ export namespace db {
 	}
 	export class Environment {
 	    name: string;
+	    base_url: string;
+	    access_token: string;
+	    refresh_token: string;
+	    expires_at: string;
+	    auth_url: string;
+	    token_url: string;
+	    client_id: string;
+	    client_secret: string;
+	    redirect_uri: string;
+	    scope: string;
 	    variables: Record<string, string>;
+	    created_at: string;
+	    last_used: string;
+	    oauth2_config: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Environment(source);
@@ -57,7 +70,20 @@ export namespace db {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.name = source["name"];
+	        this.base_url = source["base_url"];
+	        this.access_token = source["access_token"];
+	        this.refresh_token = source["refresh_token"];
+	        this.expires_at = source["expires_at"];
+	        this.auth_url = source["auth_url"];
+	        this.token_url = source["token_url"];
+	        this.client_id = source["client_id"];
+	        this.client_secret = source["client_secret"];
+	        this.redirect_uri = source["redirect_uri"];
+	        this.scope = source["scope"];
 	        this.variables = source["variables"];
+	        this.created_at = source["created_at"];
+	        this.last_used = source["last_used"];
+	        this.oauth2_config = source["oauth2_config"];
 	    }
 	}
 	export class HistoryRecord {
@@ -228,6 +254,25 @@ export namespace db {
 		}
 	}
 	
+
+}
+
+export namespace frontend {
+	
+	export class FileFilter {
+	    DisplayName: string;
+	    Pattern: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new FileFilter(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.DisplayName = source["DisplayName"];
+	        this.Pattern = source["Pattern"];
+	    }
+	}
 
 }
 

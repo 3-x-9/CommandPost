@@ -8,19 +8,6 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
-type EndpointDef struct {
-	Method      string   `json:"method"`
-	Path        string   `json:"path"`
-	Summary     string   `json:"summary"`
-	Description string   `json:"description"`
-	Tags        []string `json:"tags"`
-}
-
-type SpecDetails struct {
-	BaseURL   string        `json:"baseUrl"`
-	Endpoints []EndpointDef `json:"endpoints"`
-}
-
 func ParseSpec(specPath string) (SpecDetails, error) {
 	loader := openapi3.NewLoader()
 
@@ -44,13 +31,11 @@ func ParseSpec(specPath string) (SpecDetails, error) {
 		return SpecDetails{}, err
 	}
 
-	// Extract BaseURL
 	baseURL := ""
 	if len(doc.Servers) > 0 {
 		baseURL = doc.Servers[0].URL
 	}
 
-	// If Spec is URL and BaseURL is relative, resolve it
 	if generator.IsURL(specPath) && !strings.HasPrefix(baseURL, "http") {
 		if specURL, err := url.Parse(specPath); err == nil {
 			if relURL, err := url.Parse(baseURL); err == nil {
